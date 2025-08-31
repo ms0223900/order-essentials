@@ -33,7 +33,7 @@ interface CartState {
   orders: Order[];
 }
 
-type CartAction = 
+type CartAction =
   | { type: 'ADD_TO_CART'; payload: { product: Product; quantity: number } }
   | { type: 'UPDATE_QUANTITY'; payload: { productId: string; quantity: number } }
   | { type: 'REMOVE_FROM_CART'; payload: { productId: string } }
@@ -48,11 +48,11 @@ const initialState: CartState = {
 
 function cartReducer(state: CartState, action: CartAction): CartState {
   switch (action.type) {
-    case 'ADD_TO_CART':
+    case 'ADD_TO_CART': {
       const existingItemIndex = state.items.findIndex(
         item => item.product.id === action.payload.product.id
       );
-      
+
       if (existingItemIndex >= 0) {
         const updatedItems = [...state.items];
         updatedItems[existingItemIndex].quantity += action.payload.quantity;
@@ -63,7 +63,8 @@ function cartReducer(state: CartState, action: CartAction): CartState {
           items: [...state.items, { product: action.payload.product, quantity: action.payload.quantity }]
         };
       }
-    
+    }
+
     case 'UPDATE_QUANTITY':
       return {
         ...state,
@@ -73,23 +74,23 @@ function cartReducer(state: CartState, action: CartAction): CartState {
             : item
         ).filter(item => item.quantity > 0)
       };
-    
+
     case 'REMOVE_FROM_CART':
       return {
         ...state,
         items: state.items.filter(item => item.product.id !== action.payload.productId)
       };
-    
+
     case 'CLEAR_CART':
       return { ...state, items: [] };
-    
+
     case 'CREATE_ORDER':
       return {
         ...state,
         orders: [action.payload, ...state.orders],
         items: []
       };
-    
+
     case 'UPDATE_ORDER_STATUS':
       return {
         ...state,
@@ -99,7 +100,7 @@ function cartReducer(state: CartState, action: CartAction): CartState {
             : order
         )
       };
-    
+
     default:
       return state;
   }
@@ -141,7 +142,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const createOrder = (customerInfo: Order['customerInfo']) => {
     const orderId = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     const total = getTotalPrice();
-    
+
     const order: Order = {
       id: orderId,
       items: [...state.items],
