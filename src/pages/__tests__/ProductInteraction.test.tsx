@@ -1,12 +1,12 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { render, screen, fireEvent } from '@/test/utils/test-utils'
 import ProductPage from '@/pages/Product'
-import { useToast } from '@/hooks/use-toast'
 
 // 模擬 useToast hook
+const mockToast = vi.fn()
 vi.mock('@/hooks/use-toast', () => ({
     useToast: vi.fn(() => ({
-        toast: vi.fn()
+        toast: mockToast
     }))
 }))
 
@@ -62,9 +62,8 @@ describe('Product Page Interaction', () => {
         expect(screen.getByText('NT$ 8,997')).toBeInTheDocument()
     })
 
-    it.skip('應該能夠將商品加入購物車並顯示提示', () => {
+    it('應該能夠將商品加入購物車並顯示提示', () => {
         const addToCartButton = screen.getByRole('button', { name: /加入購物車/i })
-        const mockToast = useToast().toast
 
         fireEvent.click(addToCartButton)
 
@@ -77,10 +76,9 @@ describe('Product Page Interaction', () => {
         )
     })
 
-    it.skip('應該能夠調整數量後加入購物車', () => {
+    it('應該能夠調整數量後加入購物車', () => {
         const plusButton = screen.getAllByRole('button', { name: '' })[1]
         const addToCartButton = screen.getByRole('button', { name: /加入購物車/i })
-        const mockToast = useToast().toast
 
         // 增加數量到3
         fireEvent.click(plusButton)
