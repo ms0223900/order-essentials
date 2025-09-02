@@ -6,6 +6,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CartProvider } from "@/contexts/CartContext";
 import Navbar from "@/components/Navbar";
 import ProductPage from "./pages/Product";
+import ProductList from "./pages/ProductList";
+import ProductDetail from "./pages/ProductDetail";
 import CartPage from "./pages/Cart";
 import OrdersPage from "./pages/Orders";
 import NotFound from "./pages/NotFound";
@@ -22,7 +24,10 @@ const App = () => (
           <div className="min-h-screen bg-background">
             <Navbar />
             <Routes>
-              <Route path="/" element={<ProductPage />} />
+              <Route path="/" element={<ProductList />} />
+              <Route path="/products" element={<ProductList />} />
+              <Route path="/product" element={<ProductPage />} />
+              <Route path="/product/:id" element={<ProductDetail />} />
               <Route path="/cart" element={<CartPage />} />
               <Route path="/orders" element={<OrdersPage />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

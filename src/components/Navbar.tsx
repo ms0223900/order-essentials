@@ -22,14 +22,14 @@ const Navbar = () => {
           </Link>
 
           <div className="flex items-center space-x-4">
-            <Link to="/">
+            <Link to="/products">
               <Button 
-                variant={location.pathname === '/' ? 'default' : 'ghost'} 
+                variant={location.pathname === '/products' || location.pathname === '/' ? 'default' : 'ghost'} 
                 size="sm"
                 className="flex items-center space-x-2"
               >
                 <Home className="w-4 h-4" />
-                <span>商品</span>
+                <span>商品列表</span>
               </Button>
             </Link>
 
