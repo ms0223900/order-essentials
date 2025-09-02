@@ -5,7 +5,6 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { useCart } from '@/contexts/CartContext';
 import { Minus, Plus, ShoppingCart, Star, Check, Truck } from 'lucide-react';
-import heroImage from '@/assets/headphones-hero.jpg';
 import type { Product } from '@/contexts/CartContext';
 
 const ProductPage = () => {
@@ -18,7 +17,7 @@ const ProductPage = () => {
     id: 'headphones-pro',
     name: 'Premium 無線藍牙耳機',
     price: 2999,
-    image: heroImage,
+    image: '/headphones-hero.jpg',
     description: '高品質無線藍牙耳機，採用先進的主動降噪技術，提供清晰純淨的音質體驗。續航力長達30小時，快充15分鐘可使用3小時。',
     stock: 50
   };
@@ -55,13 +54,13 @@ const ProductPage = () => {
           {/* 產品圖片 */}
           <div className="space-y-4">
             <div className="aspect-video rounded-2xl overflow-hidden bg-gradient-to-br from-muted to-muted/50 shadow-elegant">
-              <img 
-                src={product.image} 
+              <img
+                src={product.image}
                 alt={product.name}
                 className="w-full h-full object-cover"
               />
             </div>
-            
+
             <div className="flex space-x-2">
               <Badge className="bg-success text-success-foreground">
                 <Check className="w-3 h-3 mr-1" />
@@ -144,7 +143,7 @@ const ProductPage = () => {
                   </span>
                 </div>
 
-                <Button 
+                <Button
                   onClick={handleAddToCart}
                   className="w-full bg-gradient-primary hover:shadow-elegant transition-all duration-300 text-lg py-6"
                   size="lg"

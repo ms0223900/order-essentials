@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { render, screen } from '@/test/utils/test-utils'
 import ProductPage from '@/pages/Product'
-import heroImage from '@/assets/headphones-hero.jpg'
 
 describe('Product Page', () => {
     beforeEach(() => {
@@ -11,7 +10,7 @@ describe('Product Page', () => {
     it('應該顯示商品圖片', () => {
         const productImage = screen.getByRole('img', { name: 'Premium 無線藍牙耳機' })
         expect(productImage).toBeInTheDocument()
-        expect(productImage).toHaveAttribute('src', heroImage)
+        expect(productImage).toHaveAttribute('src', '/headphones-hero.jpg')
         expect(productImage).toHaveAttribute('alt', 'Premium 無線藍牙耳機')
         expect(productImage).toHaveClass('w-full h-full object-cover')
     })
