@@ -66,7 +66,7 @@ export const handlers = [
     }),
 
     http.put('/api/cart/:id', async ({ params, request }) => {
-        const body = await request.json()
+        const body = await request.json() as Record<string, any>
         return HttpResponse.json({ success: true, item: { id: params.id, ...body } })
     }),
 
@@ -80,7 +80,7 @@ export const handlers = [
     }),
 
     http.post('/api/orders', async ({ request }) => {
-        const body = await request.json()
+        const body = await request.json() as Record<string, any>
         const newOrder = {
             id: orders.length + 1,
             ...body,
