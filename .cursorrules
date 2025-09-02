@@ -1,0 +1,192 @@
+# Testing Code Generation Rules
+
+## Testing Framework Configuration
+- **Testing Tool**: Vitest
+- **Testing Library**: React Testing Library
+- **Test Utils**: Use custom test utilities from `@/test/utils/test-utils`
+
+## Test Code Generation Rules
+
+### 1. Test Structure and Organization
+- Use `describe` blocks to group related tests
+- Use `it` blocks for individual test cases
+- Use `beforeEach` for test setup when needed
+- Follow the **Given-When-Then** format for test descriptions and structure
+- Use Chinese descriptions for test cases to match existing codebase style
+
+### 2. Test File Naming and Location
+- Test files should be named `ComponentName.test.tsx` for React components
+- Place test files in `__tests__` directories alongside the source files
+- Test utilities should be in `src/test/utils/test-utils.tsx`
+
+### 3. Import Statements
+```typescript
+import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { render, screen, fireEvent } from '@/test/utils/test-utils'
+// Import the component being tested
+import ComponentName from '@/path/to/component'
+```
+
+### 4. Test Structure Template
+```typescript
+describe('Component Name', () => {
+    beforeEach(() => {
+        // Setup code here
+        render(<ComponentName />)
+    })
+
+    it('應該 [expected behavior]', () => {
+        // Given: Setup test data/conditions
+        // When: Perform the action being tested
+        // Then: Assert the expected outcome
+    })
+})
+```
+
+### 5. Core Functionality Testing Requirements
+- **Primary Focus**: Test core functionality correctness
+- **Feature Implementation**: Verify features are properly implemented
+- **Requirement Compliance**: Ensure code meets specification requirements
+- **User Interaction**: Test user interactions and their expected outcomes
+- **State Management**: Verify state changes and updates
+- **Error Handling**: Test error scenarios and edge cases
+
+### 6. Testing Patterns
+
+#### Component Rendering Tests
+```typescript
+it('should display [element description]', () => {
+    // Given: Component is rendered
+    // When: Looking for specific element
+    const element = screen.getByRole('button', { name: /button text/i })
+    // Then: Element should be present and have correct properties
+    expect(element).toBeInTheDocument()
+    expect(element).toHaveTextContent('expected text')
+})
+```
+
+#### User Interaction Tests
+```typescript
+it('should be able to [action description]', () => {
+    // Given: Initial state setup
+    const button = screen.getByRole('button', { name: /button text/i })
+    const initialValue = screen.getByText('initial value')
+
+    // When: User performs action
+    fireEvent.click(button)
+
+    // Then: Verify expected outcome
+    expect(screen.getByText('new value')).toBeInTheDocument()
+})
+```
+
+#### State Management Tests
+```typescript
+it('should be able to [state change description]', () => {
+    // Given: Initial state
+    expect(screen.getByTestId('state-display')).toHaveTextContent('initial')
+
+    // When: Trigger state change
+    fireEvent.click(screen.getByRole('button', { name: /change state/i }))
+
+    // Then: Verify state update
+    expect(screen.getByTestId('state-display')).toHaveTextContent('updated')
+})
+```
+
+### 7. Mocking Guidelines
+- Use `vi.mock()` for mocking external dependencies
+- Mock hooks using `vi.fn()` and provide mock implementations
+- Use `vi.clearAllMocks()` in `beforeEach` when needed
+- Mock localStorage using `setupLocalStorage()` from test-utils
+
+### 8. Test Utilities Usage
+- Use `render` from `@/test/utils/test-utils` instead of React Testing Library's render
+- Use `mockProduct` and `mockCartItem` for consistent test data
+- Use `mockLocalStorage()` for localStorage testing
+- Create custom test components when testing context providers
+
+### 9. Assertion Patterns
+- Use `expect().toBeInTheDocument()` for element presence
+- Use `expect().toHaveTextContent()` for text content verification
+- Use `expect().toHaveClass()` for CSS class verification
+- Use `expect().toHaveAttribute()` for attribute verification
+- Use `expect().toHaveBeenCalled()` for function call verification
+
+### 10. Test Data Management
+- Use consistent mock data from test-utils
+- Create test-specific data when needed
+- Ensure test data is realistic and covers edge cases
+- Use `data-testid` attributes for complex element selection
+
+### 11. Error and Edge Case Testing
+- Test error scenarios and error handling
+- Test boundary conditions (empty states, maximum values, etc.)
+- Test accessibility features
+- Test responsive behavior when applicable
+
+### 12. Code Style Consistency
+- Follow existing codebase naming conventions
+- Use Chinese descriptions for test cases
+- Maintain consistent indentation and formatting
+- Use descriptive variable names
+- Add comments for complex test logic
+
+### 13. Performance Considerations
+- Keep tests focused and avoid unnecessary complexity
+- Use efficient selectors (prefer `getByRole` over `getByText`)
+- Avoid testing implementation details
+- Test behavior, not implementation
+
+### 14. Accessibility Testing
+- Test keyboard navigation
+- Test screen reader compatibility
+- Verify ARIA attributes
+- Test focus management
+
+### 15. Integration Testing
+- Test component integration with context providers
+- Test routing behavior
+- Test API integration (with mocks)
+- Test user workflows and user journeys
+
+## Example Test Structure
+```typescript
+import { describe, it, expect, beforeEach, vi } from 'vitest'
+import { render, screen, fireEvent } from '@/test/utils/test-utils'
+import ComponentName from '@/path/to/component'
+
+// Mock external dependencies if needed
+const mockFunction = vi.fn()
+vi.mock('@/hooks/use-external', () => ({
+    useExternal: vi.fn(() => ({
+        function: mockFunction
+    }))
+}))
+
+describe('ComponentName', () => {
+    beforeEach(() => {
+        vi.clearAllMocks()
+        render(<ComponentName />)
+    })
+
+    it('should display main content', () => {
+        // Given: Component is rendered
+        // When: Looking for main content
+        const mainContent = screen.getByRole('main')
+        // Then: Content should be present
+        expect(mainContent).toBeInTheDocument()
+    })
+
+    it('should be able to handle user interaction', () => {
+        // Given: Initial state
+        const button = screen.getByRole('button', { name: /action/i })
+
+        // When: User clicks button
+        fireEvent.click(button)
+
+        // Then: Expected outcome occurs
+        expect(mockFunction).toHaveBeenCalled()
+    })
+})
+```
