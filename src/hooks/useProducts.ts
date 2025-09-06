@@ -85,7 +85,7 @@ export function useProducts(): UseProductsResult {
    */
   const refetch = useCallback(async () => {
     await loadProducts()
-  }, [loadProducts])
+  }, [])
 
   /**
    * 根據 ID 取得單一商品
@@ -159,7 +159,7 @@ export function useProducts(): UseProductsResult {
   // 當依賴項改變時重新載入資料
   useEffect(() => {
     loadProducts()
-  }, [loadProducts])
+  }, [])
 
   return {
     // 資料狀態
