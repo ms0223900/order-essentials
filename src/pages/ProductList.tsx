@@ -1,63 +1,37 @@
-import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { ShoppingCart } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { useCart } from '@/contexts/CartContext'
+import { Product, PRODUCT_CATEGORY_LABELS } from '@/domain/types/Product'
 import { useToast } from '@/hooks/use-toast'
-import { supabase } from '@/integrations/supabase/client'
+import { useProducts } from '@/hooks/useProducts'
+import { AlertCircle, RefreshCw, ShoppingCart } from 'lucide-react'
+import { Link } from 'react-router-dom'
 
-interface Product {
-  id: string
-  name: string
-  price: number
-  description: string
-  image: string
-  category: string
-  stock: number
-}
-
+/**
+ * 商品列表元件
+ * 
+ * 重構後的特點：
+ * 1. 遵循單一職責原則 - 只負責 UI 渲染
+ * 2. 遵循依賴反轉原則 - 透過 Hook 取得資料，不直接依賴 Supabase
+ * 3. 更好的錯誤處理和載入狀態管理
+ * 4. 更容易測試和維護
+ */
 export default function ProductList() {
-  const [products, setProducts] = useState<Product[]>([])
-  const [loading, setLoading] = useState(true)
   const { addToCart } = useCart()
   const { toast } = useToast()
+  
+  // 使用自定義 Hook 管理商品資料
+  const { 
+    products, 
+    loading, 
+    error, 
+    refetch 
+  } = useProducts()
 
-  useEffect(() => {
-    fetchProducts()
-  }, [])
-
-  const fetchProducts = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .order('created_at', { ascending: false })
-
-      if (error) {
-        console.error('Error fetching products:', error)
-        toast({
-          title: "載入失敗",
-          description: "無法載入商品列表，請稍後再試",
-          variant: "destructive"
-        })
-        return
-      }
-
-      setProducts(data || [])
-    } catch (error) {
-      console.error('Error:', error)
-      toast({
-        title: "載入失敗",
-        description: "無法載入商品列表，請稍後再試",
-        variant: "destructive"
-      })
-    } finally {
-      setLoading(false)
-    }
-  }
-
+  /**
+   * 處理加入購物車
+   */
   const handleAddToCart = (product: Product) => {
     const cartProduct = {
       id: product.id,
@@ -75,6 +49,16 @@ export default function ProductList() {
     })
   }
 
+  /**
+   * 處理重新載入
+   */
+  const handleRetry = async () => {
+    await refetch()
+  }
+
+  /**
+   * 格式化價格顯示
+   */
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat('zh-TW', {
       style: 'currency',
@@ -83,6 +67,16 @@ export default function ProductList() {
     }).format(price)
   }
 
+  /**
+   * 取得商品類別顯示名稱
+   */
+  const getCategoryLabel = (category: string) => {
+    return PRODUCT_CATEGORY_LABELS[category as keyof typeof PRODUCT_CATEGORY_LABELS] || category
+  }
+
+  /**
+   * 載入中狀態
+   */
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-primary">
@@ -90,6 +84,33 @@ export default function ProductList() {
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto"></div>
             <p className="text-white mt-4">載入中...</p>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  /**
+   * 錯誤狀態
+   */
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-primary">
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center">
+            <div className="w-24 h-24 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+              <AlertCircle className="w-12 h-12 text-red-400" />
+            </div>
+            <h3 className="text-2xl font-semibold text-white mb-2">載入失敗</h3>
+            <p className="text-white/60 mb-6">{error}</p>
+            <Button 
+              onClick={handleRetry}
+              variant="outline"
+              className="bg-white/10 border-white/20 text-white hover:bg-white/20"
+            >
+              <RefreshCw className="w-4 h-4 mr-2" />
+              重新載入
+            </Button>
           </div>
         </div>
       </div>
@@ -138,7 +159,7 @@ export default function ProductList() {
                       {product.name}
                     </CardTitle>
                     <Badge variant={product.category === 'electronics' ? 'default' : 'secondary'} className="ml-2 shrink-0">
-                      {product.category === 'electronics' ? '電子產品' : '配件'}
+                      {getCategoryLabel(product.category)}
                     </Badge>
                   </div>
                   
