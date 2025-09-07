@@ -429,7 +429,7 @@ export class SupabaseProductRepository implements ProductRepository {
       }))
 
       const { data, error } = await supabase.rpc('deduct_inventory_batch', {
-        items: JSON.stringify(items)
+        items: items
       })
 
       if (error) {
@@ -482,7 +482,7 @@ export class SupabaseProductRepository implements ProductRepository {
       }))
 
       const { data, error } = await supabase.rpc('check_inventory_availability', {
-        items: JSON.stringify(items)
+        items: items
       })
 
       if (error) {

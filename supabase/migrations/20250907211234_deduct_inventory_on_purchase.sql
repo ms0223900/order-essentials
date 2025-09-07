@@ -79,11 +79,52 @@ DECLARE
     all_success BOOLEAN := true;
     error_message TEXT := '';
 BEGIN
+    -- 驗證輸入參數
+    IF items IS NULL THEN
+        RETURN json_build_object(
+            'success', false,
+            'error', 'items 參數不能為 null',
+            'error_code', 'INVALID_INPUT'
+        );
+    END IF;
+    
+    -- 檢查是否為 JSON 陣列
+    IF json_typeof(items) != 'array' THEN
+        RETURN json_build_object(
+            'success', false,
+            'error', 'items 必須是一個 JSON 陣列',
+            'error_code', 'INVALID_INPUT'
+        );
+    END IF;
+    
+    -- 檢查陣列是否為空
+    IF json_array_length(items) = 0 THEN
+        RETURN json_build_object(
+            'success', false,
+            'error', 'items 陣列不能為空',
+            'error_code', 'INVALID_INPUT'
+        );
+    END IF;
+    
     -- 遍歷每個商品項目
     FOR item IN SELECT * FROM json_array_elements(items)
     LOOP
-        product_id := (item->>'product_id')::UUID;
-        quantity := (item->>'quantity')::INTEGER;
+        -- 驗證每個項目的格式
+        IF item->>'product_id' IS NULL OR item->>'quantity' IS NULL THEN
+            all_success := false;
+            error_message := '每個項目必須包含 product_id 和 quantity';
+            EXIT;
+        END IF;
+        
+        BEGIN
+            product_id := (item->>'product_id')::UUID;
+            quantity := (item->>'quantity')::INTEGER;
+        EXCEPTION
+            WHEN OTHERS THEN
+                all_success := false;
+                error_message := 'product_id 必須是有效的 UUID，quantity 必須是有效的整數';
+                EXIT;
+        END;
         
         -- 調用單個商品扣除函數
         deduction_result := public.deduct_inventory(product_id, quantity);
@@ -138,11 +179,60 @@ DECLARE
     unavailable_items JSON[] := '{}';
     all_available BOOLEAN := true;
 BEGIN
+    -- 驗證輸入參數
+    IF items IS NULL THEN
+        RETURN json_build_object(
+            'available', false,
+            'error', 'items 參數不能為 null',
+            'error_code', 'INVALID_INPUT'
+        );
+    END IF;
+    
+    -- 檢查是否為 JSON 陣列
+    IF json_typeof(items) != 'array' THEN
+        RETURN json_build_object(
+            'available', false,
+            'error', 'items 必須是一個 JSON 陣列',
+            'error_code', 'INVALID_INPUT'
+        );
+    END IF;
+    
+    -- 檢查陣列是否為空
+    IF json_array_length(items) = 0 THEN
+        RETURN json_build_object(
+            'available', false,
+            'error', 'items 陣列不能為空',
+            'error_code', 'INVALID_INPUT'
+        );
+    END IF;
+    
     -- 遍歷每個商品項目
     FOR item IN SELECT * FROM json_array_elements(items)
     LOOP
-        product_id := (item->>'product_id')::UUID;
-        quantity := (item->>'quantity')::INTEGER;
+        -- 驗證每個項目的格式
+        IF item->>'product_id' IS NULL OR item->>'quantity' IS NULL THEN
+            all_available := false;
+            unavailable_items := array_append(unavailable_items, json_build_object(
+                'product_id', COALESCE(item->>'product_id', 'null'),
+                'error', '每個項目必須包含 product_id 和 quantity',
+                'error_code', 'INVALID_ITEM_FORMAT'
+            ));
+            CONTINUE;
+        END IF;
+        
+        BEGIN
+            product_id := (item->>'product_id')::UUID;
+            quantity := (item->>'quantity')::INTEGER;
+        EXCEPTION
+            WHEN OTHERS THEN
+                all_available := false;
+                unavailable_items := array_append(unavailable_items, json_build_object(
+                    'product_id', item->>'product_id',
+                    'error', 'product_id 必須是有效的 UUID，quantity 必須是有效的整數',
+                    'error_code', 'INVALID_ITEM_FORMAT'
+                ));
+                CONTINUE;
+        END;
         
         -- 檢查商品是否存在並取得庫存
         SELECT stock INTO current_stock
