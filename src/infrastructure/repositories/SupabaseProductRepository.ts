@@ -1,4 +1,10 @@
-import { ProductRepository } from '@/domain/repositories/ProductRepository'
+import {
+  BatchInventoryDeductionResult,
+  InventoryAvailabilityResult,
+  InventoryDeductionRequest,
+  InventoryDeductionResult,
+  ProductRepository
+} from '@/domain/repositories/ProductRepository'
 import { CreateProductRequest, Product, UpdateProductRequest, UpdateStockRequest } from '@/domain/types/Product'
 import { PaginationOptions, RepositoryResult } from '@/domain/types/Repository'
 import { supabase } from '@/integrations/supabase/client'
@@ -32,8 +38,8 @@ export class SupabaseProductRepository implements ProductRepository {
 
       // 應用排序
       if (options?.sortBy) {
-        query = query.order(options.sortBy, { 
-          ascending: options.sortOrder === 'asc' 
+        query = query.order(options.sortBy, {
+          ascending: options.sortOrder === 'asc'
         })
       }
 
@@ -158,7 +164,7 @@ export class SupabaseProductRepository implements ProductRepository {
   async update(product: UpdateProductRequest): Promise<RepositoryResult<Product>> {
     try {
       const { id, ...updateData } = product
-      
+
       const { data, error } = await supabase
         .from(this.tableName)
         .update(updateData)
@@ -356,6 +362,151 @@ export class SupabaseProductRepository implements ProductRepository {
         data: null,
         error: {
           message: '搜尋商品時發生未預期的錯誤',
+          code: 'UNEXPECTED_ERROR',
+          details: error
+        }
+      }
+    }
+  }
+
+  /**
+   * 扣除單個商品庫存
+   */
+  async deductInventory(request: InventoryDeductionRequest): Promise<RepositoryResult<InventoryDeductionResult>> {
+    try {
+      const { data, error } = await supabase.rpc('deduct_inventory', {
+        product_id: request.productId,
+        quantity_to_deduct: request.quantity
+      })
+
+      if (error) {
+        return {
+          data: null,
+          error: {
+            message: `扣除庫存失敗: ${error.message}`,
+            code: error.code,
+            details: error
+          }
+        }
+      }
+
+      const result = data as unknown as InventoryDeductionResult
+
+      if (!result.success) {
+        return {
+          data: null,
+          error: {
+            message: result.error || '扣除庫存失敗',
+            code: result.errorCode || 'DEDUCTION_FAILED'
+          }
+        }
+      }
+
+      return {
+        data: result,
+        error: null
+      }
+    } catch (error) {
+      return {
+        data: null,
+        error: {
+          message: '扣除庫存時發生未預期的錯誤',
+          code: 'UNEXPECTED_ERROR',
+          details: error
+        }
+      }
+    }
+  }
+
+  /**
+   * 批量扣除多個商品庫存
+   */
+  async deductInventoryBatch(requests: InventoryDeductionRequest[]): Promise<RepositoryResult<BatchInventoryDeductionResult>> {
+    try {
+      const items = requests.map(req => ({
+        product_id: req.productId,
+        quantity: req.quantity
+      }))
+
+      const { data, error } = await supabase.rpc('deduct_inventory_batch', {
+        items: JSON.stringify(items)
+      })
+
+      if (error) {
+        return {
+          data: null,
+          error: {
+            message: `批量扣除庫存失敗: ${error.message}`,
+            code: error.code,
+            details: error
+          }
+        }
+      }
+
+      const result = data as unknown as BatchInventoryDeductionResult
+
+      if (!result.success) {
+        return {
+          data: null,
+          error: {
+            message: result.error || '批量扣除庫存失敗',
+            code: result.errorCode || 'BATCH_DEDUCTION_FAILED'
+          }
+        }
+      }
+
+      return {
+        data: result,
+        error: null
+      }
+    } catch (error) {
+      return {
+        data: null,
+        error: {
+          message: '批量扣除庫存時發生未預期的錯誤',
+          code: 'UNEXPECTED_ERROR',
+          details: error
+        }
+      }
+    }
+  }
+
+  /**
+   * 檢查多個商品的庫存可用性
+   */
+  async checkInventoryAvailability(requests: InventoryDeductionRequest[]): Promise<RepositoryResult<InventoryAvailabilityResult>> {
+    try {
+      const items = requests.map(req => ({
+        product_id: req.productId,
+        quantity: req.quantity
+      }))
+
+      const { data, error } = await supabase.rpc('check_inventory_availability', {
+        items: JSON.stringify(items)
+      })
+
+      if (error) {
+        return {
+          data: null,
+          error: {
+            message: `檢查庫存可用性失敗: ${error.message}`,
+            code: error.code,
+            details: error
+          }
+        }
+      }
+
+      const result = data as unknown as InventoryAvailabilityResult
+
+      return {
+        data: result,
+        error: null
+      }
+    } catch (error) {
+      return {
+        data: null,
+        error: {
+          message: '檢查庫存可用性時發生未預期的錯誤',
           code: 'UNEXPECTED_ERROR',
           details: error
         }

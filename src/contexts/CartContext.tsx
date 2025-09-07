@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useReducer, ReactNode } from 'react';
+import { InventoryDeductionRequest, ProductRepository } from '@/domain/repositories/ProductRepository';
+import { container } from '@/infrastructure/container';
+import { createContext, ReactNode, useContext, useReducer } from 'react';
 
 export interface Product {
   id: string;
@@ -112,7 +114,7 @@ interface CartContextType {
   updateQuantity: (productId: string, quantity: number) => void;
   removeFromCart: (productId: string) => void;
   clearCart: () => void;
-  createOrder: (customerInfo: Order['customerInfo']) => string;
+  createOrder: (customerInfo: Order['customerInfo']) => Promise<string>;
   updateOrderStatus: (orderId: string, status: Order['status']) => void;
   getTotalPrice: () => number;
   getTotalItems: () => number;
@@ -139,22 +141,56 @@ export function CartProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'CLEAR_CART' });
   };
 
-  const createOrder = (customerInfo: Order['customerInfo']) => {
+  const createOrder = async (customerInfo: Order['customerInfo']): Promise<string> => {
     const orderId = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     const total = getTotalPrice();
 
-    const order: Order = {
-      id: orderId,
-      items: [...state.items],
-      total,
-      customerInfo,
-      status: 'pending',
-      createdAt: new Date(),
-      paymentMethod: 'cod'
-    };
+    // 準備庫存扣除請求
+    const inventoryRequests: InventoryDeductionRequest[] = state.items.map(item => ({
+      productId: item.product.id,
+      quantity: item.quantity
+    }));
 
-    dispatch({ type: 'CREATE_ORDER', payload: order });
-    return orderId;
+    // 獲取產品倉庫實例
+    const productRepository = container.resolve<ProductRepository>('ProductRepository');
+
+    try {
+      // 先檢查庫存可用性
+      const availabilityResult = await productRepository.checkInventoryAvailability(inventoryRequests);
+
+      if (availabilityResult.error || !availabilityResult.data?.available) {
+        const errorMessage = availabilityResult.data?.unavailableItems?.map(item =>
+          `商品 ${item.productId}: ${item.error}`
+        ).join(', ') || availabilityResult.error?.message || '庫存檢查失敗';
+
+        throw new Error(`庫存不足: ${errorMessage}`);
+      }
+
+      // 扣除庫存
+      const deductionResult = await productRepository.deductInventoryBatch(inventoryRequests);
+
+      if (deductionResult.error || !deductionResult.data?.success) {
+        const errorMessage = deductionResult.error?.message || deductionResult.data?.error || '庫存扣除失敗';
+        throw new Error(`庫存扣除失敗: ${errorMessage}`);
+      }
+
+      // 庫存扣除成功，創建訂單
+      const order: Order = {
+        id: orderId,
+        items: [...state.items],
+        total,
+        customerInfo,
+        status: 'pending',
+        createdAt: new Date(),
+        paymentMethod: 'cod'
+      };
+
+      dispatch({ type: 'CREATE_ORDER', payload: order });
+      return orderId;
+    } catch (error) {
+      // 如果庫存扣除失敗，拋出錯誤
+      throw error;
+    }
   };
 
   const updateOrderStatus = (orderId: string, status: Order['status']) => {

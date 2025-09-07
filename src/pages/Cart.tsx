@@ -1,20 +1,20 @@
-import React, { useState } from 'react';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/hooks/use-toast';
 import { useCart } from '@/contexts/CartContext';
+import { useToast } from '@/hooks/use-toast';
+import { CreditCard, Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Minus, Plus, Trash2, ShoppingBag, CreditCard } from 'lucide-react';
 
 const CartPage = () => {
   const { state, updateQuantity, removeFromCart, createOrder, getTotalPrice } = useCart();
   const { toast } = useToast();
   const navigate = useNavigate();
-  
+
   const [customerInfo, setCustomerInfo] = useState({
     name: '',
     phone: '',
@@ -40,7 +40,7 @@ const CartPage = () => {
 
   const handleSubmitOrder = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (state.items.length === 0) {
       toast({
         title: "購物車為空",
@@ -59,10 +59,11 @@ const CartPage = () => {
       return;
     }
 
+
     setIsSubmitting(true);
-    
+
     try {
-      const orderId = createOrder(customerInfo);
+      const orderId = await createOrder(customerInfo);
       toast({
         title: "訂單建立成功！",
         description: `訂單編號：${orderId}`,
@@ -71,7 +72,7 @@ const CartPage = () => {
     } catch (error) {
       toast({
         title: "訂單建立失敗",
-        description: "請稍後再試",
+        description: error instanceof Error ? error.message : "請稍後再試",
         variant: "destructive",
       });
     } finally {
@@ -102,7 +103,7 @@ const CartPage = () => {
     <div className="min-h-screen bg-background">
       <div className="max-w-4xl mx-auto px-4 py-8">
         <h1 className="text-3xl font-bold text-foreground mb-8">購物車</h1>
-        
+
         <div className="grid lg:grid-cols-3 gap-8">
           {/* 購物車商品列表 */}
           <div className="lg:col-span-2 space-y-4">
@@ -111,17 +112,17 @@ const CartPage = () => {
                 <CardContent className="p-6">
                   <div className="flex space-x-4">
                     <div className="w-24 h-24 bg-muted rounded-lg overflow-hidden flex-shrink-0">
-                      <img 
-                        src={item.product.image} 
+                      <img
+                        src={item.product.image}
                         alt={item.product.name}
                         className="w-full h-full object-cover"
                       />
                     </div>
-                    
+
                     <div className="flex-1 space-y-2">
                       <h3 className="font-semibold text-foreground">{item.product.name}</h3>
                       <p className="text-sm text-muted-foreground">{item.product.description}</p>
-                      
+
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
                           <Button
@@ -144,7 +145,7 @@ const CartPage = () => {
                             <Plus className="w-3 h-3" />
                           </Button>
                         </div>
-                        
+
                         <div className="flex items-center space-x-3">
                           <span className="text-lg font-bold text-primary">
                             NT$ {(item.product.price * item.quantity).toLocaleString()}
@@ -207,37 +208,37 @@ const CartPage = () => {
                     <Input
                       id="name"
                       value={customerInfo.name}
-                      onChange={(e) => setCustomerInfo({...customerInfo, name: e.target.value})}
+                      onChange={(e) => setCustomerInfo({ ...customerInfo, name: e.target.value })}
                       placeholder="請輸入收件人姓名"
                       required
                     />
                   </div>
-                  
+
                   <div>
                     <Label htmlFor="phone">電話 *</Label>
                     <Input
                       id="phone"
                       value={customerInfo.phone}
-                      onChange={(e) => setCustomerInfo({...customerInfo, phone: e.target.value})}
+                      onChange={(e) => setCustomerInfo({ ...customerInfo, phone: e.target.value })}
                       placeholder="請輸入聯絡電話"
                       required
                     />
                   </div>
-                  
+
                   <div>
                     <Label htmlFor="address">地址 *</Label>
                     <Textarea
                       id="address"
                       value={customerInfo.address}
-                      onChange={(e) => setCustomerInfo({...customerInfo, address: e.target.value})}
+                      onChange={(e) => setCustomerInfo({ ...customerInfo, address: e.target.value })}
                       placeholder="請輸入完整收件地址"
                       rows={3}
                       required
                     />
                   </div>
-                  
-                  <Button 
-                    type="submit" 
+
+                  <Button
+                    type="submit"
                     className="w-full bg-gradient-primary hover:shadow-elegant transition-all duration-300"
                     size="lg"
                     disabled={isSubmitting}
