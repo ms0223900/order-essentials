@@ -1,15 +1,17 @@
 import { Product } from '@/domain/types/Product'
+import { useToast } from '@/hooks/use-toast'
+import { useProducts } from '@/hooks/useProducts'
 import { fireEvent, render, screen } from '@/test/utils/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import ProductList from '../ProductList'
 
 // Mock useProducts Hook
 vi.mock('@/hooks/useProducts')
-const mockUseProducts = vi.mocked(require('@/hooks/useProducts').useProducts)
+const mockUseProducts = vi.mocked(useProducts)
 
 // Mock useToast Hook
 vi.mock('@/hooks/use-toast')
-const mockUseToast = vi.mocked(require('@/hooks/use-toast').useToast)
+const mockUseToast = vi.mocked(useToast)
 
 // Mock 商品資料
 const mockProducts: Product[] = [
@@ -63,7 +65,9 @@ describe('ProductList 整合測試', () => {
         })
 
         mockUseToast.mockReturnValue({
-            toast: mockToast
+            toast: mockToast,
+            dismiss: vi.fn(),
+            toasts: []
         })
     })
 
@@ -114,9 +118,9 @@ describe('ProductList 整合測試', () => {
             render(<ProductList />)
 
             // Then: 應該顯示正確的價格格式
-            expect(screen.getByText('NT$36,900')).toBeInTheDocument()
-            expect(screen.getByText('NT$37,900')).toBeInTheDocument()
-            expect(screen.getByText('NT$7,490')).toBeInTheDocument()
+            expect(screen.getByText('$36,900')).toBeInTheDocument()
+            expect(screen.getByText('$37,900')).toBeInTheDocument()
+            expect(screen.getByText('$7,490')).toBeInTheDocument()
         })
 
         it('應該正確顯示商品類別標籤', () => {
@@ -416,7 +420,7 @@ describe('ProductList 整合測試', () => {
             render(<ProductList />)
 
             // Then: 應該顯示錯誤狀態，而不是商品列表
-            expect(screen.getByText('載入失敗')).toBeInTheDocument()
+            expect(screen.getByRole('heading', { name: '載入失敗' })).toBeInTheDocument()
             expect(screen.queryByText('iPhone 15 Pro')).not.toBeInTheDocument()
         })
     })
