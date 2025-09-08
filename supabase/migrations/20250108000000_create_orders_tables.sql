@@ -150,14 +150,29 @@ BEGIN
     -- 生成訂單編號
     order_number := 'ORD-' || to_char(now(), 'YYYYMMDD') || '-' || lpad(nextval('order_sequence')::text, 6, '0');
     
-    -- 計算總金額
+    -- 建立訂單
+    INSERT INTO public.orders (
+        order_number,
+        customer_name,
+        customer_phone,
+        customer_address,
+        total_amount
+    ) VALUES (
+        order_number,
+        p_customer_name,
+        p_customer_phone,
+        p_customer_address,
+        0  -- 先設為 0，稍後更新
+    ) RETURNING id INTO order_id;
+    
+    -- 建立訂單項目並計算總金額
     FOR item IN SELECT * FROM json_array_elements(p_items)
     LOOP
         product_id := (item->>'product_id')::UUID;
         quantity := (item->>'quantity')::INTEGER;
         
         -- 取得商品資訊
-        SELECT price INTO product_record.price
+        SELECT name, price, image INTO product_record.name, product_record.price, product_record.image
         FROM public.products
         WHERE id = product_id;
         
@@ -171,35 +186,6 @@ BEGIN
         
         subtotal := product_record.price * quantity;
         total_amount := total_amount + subtotal;
-    END LOOP;
-    
-    -- 建立訂單
-    INSERT INTO public.orders (
-        order_number,
-        customer_name,
-        customer_phone,
-        customer_address,
-        total_amount
-    ) VALUES (
-        order_number,
-        p_customer_name,
-        p_customer_phone,
-        p_customer_address,
-        total_amount
-    ) RETURNING id INTO order_id;
-    
-    -- 建立訂單項目
-    FOR item IN SELECT * FROM json_array_elements(p_items)
-    LOOP
-        product_id := (item->>'product_id')::UUID;
-        quantity := (item->>'quantity')::INTEGER;
-        
-        -- 取得商品資訊
-        SELECT name, price, image INTO product_record.name, product_record.price, product_record.image
-        FROM public.products
-        WHERE id = product_id;
-        
-        subtotal := product_record.price * quantity;
         
         -- 插入訂單項目
         INSERT INTO public.order_items (
@@ -220,6 +206,11 @@ BEGIN
             subtotal
         );
     END LOOP;
+    
+    -- 更新訂單總金額
+    UPDATE public.orders
+    SET total_amount = total_amount
+    WHERE id = order_id;
     
     -- 返回成功結果
     RETURN json_build_object(
