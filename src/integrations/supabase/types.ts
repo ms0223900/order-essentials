@@ -81,19 +81,59 @@ export type Database = {
           p_customer_address: string
           p_items: Json
         }
-        Returns: Json
+        Returns: {
+          success: boolean
+          order_id?: string
+          order_number?: string
+          total_amount?: number
+          error?: string
+          error_code?: string
+        }
       }
       get_orders_with_items: {
         Args: {
         }
-        Returns: Json
+        Returns: {
+          success: boolean
+          orders?: Array<{
+            id: string
+            order_number: string
+            customer_name: string
+            customer_phone: string
+            customer_address: string
+            total_amount: string
+            status: string
+            payment_method: string
+            created_at: string
+            updated_at: string
+            items: Array<{
+              id: string
+              product_id: string
+              product_name: string
+              product_price: string
+              product_image: string | null
+              quantity: number
+              subtotal: string
+            }>
+          }>
+          error?: string
+          error_code?: string
+        }
       }
       update_order_status: {
         Args: {
           p_order_id: string
           p_status: string
         }
-        Returns: Json
+        Returns: {
+          success: boolean
+          order_id?: string
+          order_number?: string
+          status?: string
+          updated_at?: string
+          error?: string
+          error_code?: string
+        }
       }
     }
     Enums: {

@@ -161,7 +161,7 @@ export class SupabaseOrderRepository implements OrderRepository {
         success: true,
         orderId: data.order_id,
         orderNumber: data.order_number,
-        status: data.status,
+        status: data.status as Order['status'],
         updatedAt: new Date(data.updated_at)
       };
     } catch (error) {
