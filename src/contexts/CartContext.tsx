@@ -1,4 +1,6 @@
+import { OrderRepository } from '@/domain/repositories/OrderRepository';
 import { InventoryDeductionRequest, ProductRepository } from '@/domain/repositories/ProductRepository';
+import { Order } from '@/domain/types/Order';
 import { container } from '@/infrastructure/container';
 import { createContext, ReactNode, useContext, useReducer } from 'react';
 
@@ -16,7 +18,11 @@ export interface CartItem {
   quantity: number;
 }
 
-export interface Order {
+// 使用新的 Order 類型
+export type { Order } from '@/domain/types/Order';
+
+// 為了向後相容，保留舊的介面定義
+export interface LegacyOrder {
   id: string;
   items: CartItem[];
   total: number;
@@ -32,7 +38,7 @@ export interface Order {
 
 interface CartState {
   items: CartItem[];
-  orders: Order[];
+  orders: LegacyOrder[];
 }
 
 type CartAction =
@@ -40,8 +46,8 @@ type CartAction =
   | { type: 'UPDATE_QUANTITY'; payload: { productId: string; quantity: number } }
   | { type: 'REMOVE_FROM_CART'; payload: { productId: string } }
   | { type: 'CLEAR_CART' }
-  | { type: 'CREATE_ORDER'; payload: Order }
-  | { type: 'UPDATE_ORDER_STATUS'; payload: { orderId: string; status: Order['status'] } };
+  | { type: 'CREATE_ORDER'; payload: LegacyOrder }
+  | { type: 'UPDATE_ORDER_STATUS'; payload: { orderId: string; status: LegacyOrder['status'] } };
 
 const initialState: CartState = {
   items: [],
@@ -114,7 +120,7 @@ interface CartContextType {
   updateQuantity: (productId: string, quantity: number) => void;
   removeFromCart: (productId: string) => void;
   clearCart: () => void;
-  createOrder: (customerInfo: Order['customerInfo']) => Promise<string>;
+  createOrder: (customerInfo: LegacyOrder['customerInfo']) => Promise<string>;
   updateOrderStatus: (orderId: string, status: Order['status']) => void;
   getTotalPrice: () => number;
   getTotalItems: () => number;
@@ -141,8 +147,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'CLEAR_CART' });
   };
 
-  const createOrder = async (customerInfo: Order['customerInfo']): Promise<string> => {
-    const orderId = `ORD-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  const createOrder = async (customerInfo: LegacyOrder['customerInfo']): Promise<string> => {
     const total = getTotalPrice();
 
     // 準備庫存扣除請求
@@ -151,8 +156,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
       quantity: item.quantity
     }));
 
-    // 獲取產品倉庫實例
+    // 獲取產品倉庫和訂單倉庫實例
     const productRepository = container.resolve<ProductRepository>('ProductRepository');
+    const orderRepository = container.resolve<OrderRepository>('OrderRepository');
 
     try {
       // 先檢查庫存可用性
@@ -174,9 +180,26 @@ export function CartProvider({ children }: { children: ReactNode }) {
         throw new Error(`庫存扣除失敗: ${errorMessage}`);
       }
 
-      // 庫存扣除成功，創建訂單
-      const order: Order = {
-        id: orderId,
+      // 庫存扣除成功，創建真實訂單
+      const createOrderRequest = {
+        customerName: customerInfo.name,
+        customerPhone: customerInfo.phone,
+        customerAddress: customerInfo.address,
+        items: state.items.map(item => ({
+          productId: item.product.id,
+          quantity: item.quantity
+        }))
+      };
+
+      const orderResult = await orderRepository.createOrder(createOrderRequest);
+
+      if (!orderResult.success) {
+        throw new Error(orderResult.error || '建立訂單失敗');
+      }
+
+      // 建立本地訂單記錄（用於向後相容）
+      const localOrder: LegacyOrder = {
+        id: orderResult.orderId || `ORD-${Date.now()}`,
         items: [...state.items],
         total,
         customerInfo,
@@ -185,15 +208,19 @@ export function CartProvider({ children }: { children: ReactNode }) {
         paymentMethod: 'cod'
       };
 
-      dispatch({ type: 'CREATE_ORDER', payload: order });
-      return orderId;
+      dispatch({ type: 'CREATE_ORDER', payload: localOrder });
+
+      // 清空購物車
+      dispatch({ type: 'CLEAR_CART' });
+
+      return orderResult.orderId || localOrder.id;
     } catch (error) {
       // 如果庫存扣除失敗，拋出錯誤
       throw error;
     }
   };
 
-  const updateOrderStatus = (orderId: string, status: Order['status']) => {
+  const updateOrderStatus = (orderId: string, status: LegacyOrder['status']) => {
     dispatch({ type: 'UPDATE_ORDER_STATUS', payload: { orderId, status } });
   };
 

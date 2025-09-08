@@ -1,5 +1,7 @@
 import { ProductRepository } from '@/domain/repositories/ProductRepository'
 import { SupabaseProductRepository } from '@/infrastructure/repositories/SupabaseProductRepository'
+import { OrderRepository } from '@/domain/repositories/OrderRepository'
+import { SupabaseOrderRepository } from '@/infrastructure/repositories/SupabaseOrderRepository'
 
 /**
  * 依賴注入容器
@@ -44,7 +46,11 @@ container.register<ProductRepository>('ProductRepository', () => {
   return new SupabaseProductRepository()
 })
 
+container.register<OrderRepository>('OrderRepository', () => {
+  return new SupabaseOrderRepository()
+})
+
 // 導出容器和類型
 export { DIContainer }
-export type { ProductRepository }
+export type { ProductRepository, OrderRepository }
 

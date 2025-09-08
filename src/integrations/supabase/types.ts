@@ -74,6 +74,27 @@ export type Database = {
         }
         Returns: Json
       }
+      create_order_with_items: {
+        Args: {
+          p_customer_name: string
+          p_customer_phone: string
+          p_customer_address: string
+          p_items: Json
+        }
+        Returns: Json
+      }
+      get_orders_with_items: {
+        Args: {
+        }
+        Returns: Json
+      }
+      update_order_status: {
+        Args: {
+          p_order_id: string
+          p_status: string
+        }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never
