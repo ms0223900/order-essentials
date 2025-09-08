@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeEach } from 'vitest'
-import { render, screen } from '@/test/utils/test-utils'
 import Navbar from '@/components/Navbar'
+import { render, screen } from '@/test/utils/test-utils'
+import { beforeEach, describe, expect, it } from 'vitest'
 
 describe('Navbar', () => {
     beforeEach(() => {
@@ -22,11 +22,5 @@ describe('Navbar', () => {
         render(<Navbar />)
         const ordersLink = screen.getByRole('link', { name: /訂單/i })
         expect(ordersLink).toBeInTheDocument()
-    })
-
-    it.skip('應該顯示購物車商品數量', () => {
-        render(<Navbar />)
-        // 這裡可以測試購物車數量的顯示邏輯
-        expect(screen.getByTestId('cart-count')).toBeInTheDocument()
     })
 })
