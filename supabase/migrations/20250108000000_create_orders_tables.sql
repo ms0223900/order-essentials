@@ -137,7 +137,7 @@ DECLARE
     item JSON;
     product_id UUID;
     quantity INTEGER;
-    total_amount DECIMAL(10,2) := 0;
+    calculated_total DECIMAL(10,2) := 0;
     subtotal DECIMAL(10,2);
     result JSON;
     product_name TEXT;
@@ -158,7 +158,7 @@ BEGIN
         customer_name,
         customer_phone,
         customer_address,
-        calculated_total
+        total_amount
     ) VALUES (
         order_number,
         p_customer_name,
