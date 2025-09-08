@@ -18,6 +18,13 @@ const mockProductRepository = {
     search: vi.fn(),
 }
 
+// Mock 訂單倉庫
+const mockOrderRepository = {
+    createOrder: vi.fn(),
+    getOrders: vi.fn(),
+    updateOrderStatus: vi.fn(),
+}
+
 // Mock toast
 const mockToast = vi.fn()
 vi.mock('@/hooks/use-toast', () => ({
@@ -29,7 +36,11 @@ vi.mock('@/hooks/use-toast', () => ({
 // Mock 依賴注入容器
 vi.mock('@/infrastructure/container', () => ({
     container: {
-        resolve: vi.fn(() => mockProductRepository)
+        resolve: vi.fn((key: string) => {
+            if (key === 'ProductRepository') return mockProductRepository;
+            if (key === 'OrderRepository') return mockOrderRepository;
+            return mockProductRepository; // fallback
+        })
     }
 }))
 
@@ -88,6 +99,14 @@ describe('Cart 頁面 - 庫存扣除整合測試', () => {
                 }]
             },
             error: null
+        })
+
+        // Mock 訂單建立成功
+        mockOrderRepository.createOrder.mockResolvedValueOnce({
+            success: true,
+            orderId: 'test-order-id',
+            orderNumber: 'ORD-20250108-000001',
+            totalAmount: 200
         })
 
         render(<CartWithItems />)
@@ -246,6 +265,14 @@ describe('Cart 頁面 - 庫存扣除整合測試', () => {
                 }]
             },
             error: null
+        })
+
+        // Mock 訂單建立成功
+        mockOrderRepository.createOrder.mockResolvedValueOnce({
+            success: true,
+            orderId: 'test-order-id',
+            orderNumber: 'ORD-20250108-000001',
+            totalAmount: 200
         })
 
         render(<CartWithItems />)

@@ -10,12 +10,18 @@ import { CreditCard, Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+const mockCustomerInfo = {
+  name: 'a',
+  phone: 'b',
+  address: 'c'
+};
+
 const CartPage = () => {
   const { state, updateQuantity, removeFromCart, createOrder, getTotalPrice } = useCart();
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const [customerInfo, setCustomerInfo] = useState({
+  const [customerInfo, setCustomerInfo] = useState(process.env.NODE_ENV === 'development' ? mockCustomerInfo : {
     name: '',
     phone: '',
     address: ''
