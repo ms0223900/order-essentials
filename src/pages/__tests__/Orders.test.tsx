@@ -54,8 +54,7 @@ describe('OrdersPage', () => {
         render(<OrdersPage />);
 
         // Then: 應該顯示錯誤訊息
-        expect(screen.getByText('載入訂單失敗')).toBeInTheDocument();
-        expect(screen.getByText('載入訂單失敗')).toBeInTheDocument();
+        expect(screen.getByRole('heading', { name: '載入訂單失敗' })).toBeInTheDocument();
         expect(screen.getByText('重新載入')).toBeInTheDocument();
         expect(screen.getByText('開始購物')).toBeInTheDocument();
     });
@@ -112,10 +111,16 @@ describe('OrdersPage', () => {
         expect(screen.getByText('等待確認')).toBeInTheDocument();
         expect(screen.getByText('測試商品')).toBeInTheDocument();
         expect(screen.getByText('數量：2')).toBeInTheDocument();
-        expect(screen.getByText('NT$ 1,000')).toBeInTheDocument();
-        expect(screen.getByText('收件人：測試客戶')).toBeInTheDocument();
-        expect(screen.getByText('聯絡電話：0912345678')).toBeInTheDocument();
-        expect(screen.getByText('收件地址：測試地址')).toBeInTheDocument();
+        expect(screen.getAllByText('NT$ 1,000')[0]).toBeInTheDocument();
+        expect(screen.getByText((content, element) => {
+            return element?.textContent === '收件人：測試客戶';
+        })).toBeInTheDocument();
+        expect(screen.getByText((content, element) => {
+            return element?.textContent === '聯絡電話：0912345678';
+        })).toBeInTheDocument();
+        expect(screen.getByText((content, element) => {
+            return element?.textContent === '收件地址：測試地址';
+        })).toBeInTheDocument();
     });
 
     it('應該能夠重新載入訂單', () => {

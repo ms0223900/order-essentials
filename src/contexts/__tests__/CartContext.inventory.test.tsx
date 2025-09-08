@@ -16,10 +16,21 @@ const mockProductRepository = {
     search: vi.fn(),
 }
 
+// Mock 訂單倉庫
+const mockOrderRepository = {
+    createOrder: vi.fn(),
+    getOrders: vi.fn(),
+    updateOrderStatus: vi.fn(),
+}
+
 // Mock 依賴注入容器
 vi.mock('@/infrastructure/container', () => ({
     container: {
-        resolve: vi.fn(() => mockProductRepository)
+        resolve: vi.fn((key: string) => {
+            if (key === 'ProductRepository') return mockProductRepository;
+            if (key === 'OrderRepository') return mockOrderRepository;
+            return mockProductRepository; // fallback
+        })
     }
 }))
 
@@ -64,6 +75,13 @@ const TestComponent = () => {
 describe('CartContext - 庫存扣除功能', () => {
     beforeEach(() => {
         vi.clearAllMocks()
+        // 設置預設的訂單建立成功回應
+        mockOrderRepository.createOrder.mockResolvedValue({
+            success: true,
+            orderId: 'test-order-id',
+            orderNumber: 'ORD-20250108-000001',
+            totalAmount: 200
+        })
     })
 
     it('應該在創建訂單時檢查庫存可用性', async () => {

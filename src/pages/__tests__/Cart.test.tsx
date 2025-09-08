@@ -182,6 +182,14 @@ describe('Cart 頁面 - 庫存扣除整合測試', () => {
             error: null
         })
 
+        // Mock 訂單建立成功
+        mockOrderRepository.createOrder.mockResolvedValueOnce({
+            success: true,
+            orderId: 'test-order-id',
+            orderNumber: 'ORD-20250108-000001',
+            totalAmount: 200
+        })
+
         mockProductRepository.deductInventoryBatch.mockResolvedValueOnce({
             data: {
                 success: false,

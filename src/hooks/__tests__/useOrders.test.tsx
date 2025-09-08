@@ -200,7 +200,9 @@ describe('useOrders', () => {
         });
 
         // Then: 本地狀態應該更新
-        expect(result.current.orders[0].status).toBe('confirmed');
+        await waitFor(() => {
+            expect(result.current.orders[0].status).toBe('confirmed');
+        });
     });
 
     it('應該處理更新訂單狀態失敗', async () => {
