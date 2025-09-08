@@ -173,14 +173,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       }
 
       // 扣除庫存
-      const deductionResult = await productRepository.deductInventoryBatch(inventoryRequests);
 
-      if (deductionResult.error || !deductionResult.data?.success) {
-        const errorMessage = deductionResult.error?.message || deductionResult.data?.error || '庫存扣除失敗';
-        throw new Error(`庫存扣除失敗: ${errorMessage}`);
-      }
-
-      // 庫存扣除成功，創建真實訂單
       const createOrderRequest = {
         customerName: customerInfo.name,
         customerPhone: customerInfo.phone,
@@ -195,6 +188,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
       if (!orderResult.success) {
         throw new Error(orderResult.error || '建立訂單失敗');
+      }
+
+      const deductionResult = await productRepository.deductInventoryBatch(inventoryRequests);
+
+      // 創建訂單成功，繼續扣除庫存
+      if (deductionResult.error || !deductionResult.data?.success) {
+        const errorMessage = deductionResult.error?.message || deductionResult.data?.error || '庫存扣除失敗';
+        throw new Error(`庫存扣除失敗: ${errorMessage}`);
       }
 
       // 建立本地訂單記錄（用於向後相容）
