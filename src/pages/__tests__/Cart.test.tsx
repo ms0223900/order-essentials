@@ -16,7 +16,6 @@ const mockProductRepository = {
     updateStock: vi.fn(),
     getByCategory: vi.fn(),
     search: vi.fn(),
-    deductInventory: vi.fn()
 }
 
 // Mock toast

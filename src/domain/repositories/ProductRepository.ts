@@ -50,7 +50,6 @@ export interface ProductRepository {
   search(query: string, options?: PaginationOptions): Promise<RepositoryResult<Product[]>>
 
   // 庫存管理相關方法
-  deductInventory(request: InventoryDeductionRequest): Promise<RepositoryResult<InventoryDeductionResult>>
   deductInventoryBatch(requests: InventoryDeductionRequest[]): Promise<RepositoryResult<BatchInventoryDeductionResult>>
   checkInventoryAvailability(requests: InventoryDeductionRequest[]): Promise<RepositoryResult<InventoryAvailabilityResult>>
 }

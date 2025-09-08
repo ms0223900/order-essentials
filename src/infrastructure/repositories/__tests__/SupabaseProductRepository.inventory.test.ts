@@ -22,115 +22,6 @@ describe('SupabaseProductRepository - 庫存管理功能', () => {
         repository = new SupabaseProductRepository()
     })
 
-    describe('deductInventory', () => {
-        it('應該成功扣除單個商品庫存', async () => {
-            // Given: 模擬成功的庫存扣除回應
-            const mockResult = {
-                success: true,
-                product_id: 'test-product-id',
-                product_name: '測試商品',
-                previous_stock: 10,
-                new_stock: 8,
-                quantity_deducted: 2
-            }
-            mockSupabaseRpc.mockResolvedValueOnce({
-                data: mockResult,
-                error: null
-            })
-
-            const request: InventoryDeductionRequest = {
-                productId: 'test-product-id',
-                quantity: 2
-            }
-
-            // When: 調用扣除庫存方法
-            const result = await repository.deductInventory(request)
-
-            // Then: 應該返回成功結果
-            expect(result.error).toBeNull()
-            expect(result.data).toEqual(mockResult)
-            expect(mockSupabaseRpc).toHaveBeenCalledWith('deduct_inventory', {
-                product_id: 'test-product-id',
-                quantity_to_deduct: 2
-            })
-        })
-
-        it('應該處理庫存不足的情況', async () => {
-            // Given: 模擬庫存不足的回應
-            const mockErrorResult = {
-                success: false,
-                error: '庫存不足',
-                errorCode: 'INSUFFICIENT_STOCK',
-                current_stock: 1,
-                requested_quantity: 2
-            }
-            mockSupabaseRpc.mockResolvedValueOnce({
-                data: mockErrorResult,
-                error: null
-            })
-
-            const request: InventoryDeductionRequest = {
-                productId: 'test-product-id',
-                quantity: 2
-            }
-
-            // When: 調用扣除庫存方法
-            const result = await repository.deductInventory(request)
-
-            // Then: 應該返回錯誤
-            expect(result.data).toBeNull()
-            expect(result.error?.message).toBe('庫存不足')
-            expect(result.error?.code).toBe('INSUFFICIENT_STOCK')
-        })
-
-        it('應該處理商品不存在的情況', async () => {
-            // Given: 模擬商品不存在的回應
-            const mockErrorResult = {
-                success: false,
-                error: '商品不存在',
-                errorCode: 'PRODUCT_NOT_FOUND'
-            }
-            mockSupabaseRpc.mockResolvedValueOnce({
-                data: mockErrorResult,
-                error: null
-            })
-
-            const request: InventoryDeductionRequest = {
-                productId: 'non-existent-product',
-                quantity: 1
-            }
-
-            // When: 調用扣除庫存方法
-            const result = await repository.deductInventory(request)
-
-            // Then: 應該返回錯誤
-            expect(result.data).toBeNull()
-            expect(result.error?.message).toBe('商品不存在')
-            expect(result.error?.code).toBe('PRODUCT_NOT_FOUND')
-        })
-
-        it('應該處理 Supabase 錯誤', async () => {
-            // Given: 模擬 Supabase 錯誤
-            mockSupabaseRpc.mockResolvedValueOnce({
-                data: null,
-                error: { message: 'Database connection failed', code: 'CONNECTION_ERROR' }
-            })
-
-            const request: InventoryDeductionRequest = {
-                productId: 'test-product-id',
-                quantity: 1
-            }
-
-            // When: 調用扣除庫存方法
-            const result = await repository.deductInventory(request)
-
-            // Then: 應該返回錯誤
-            expect(result.data).toBeNull()
-            expect(result.error?.message).toBe('扣除庫存失敗: Database connection failed')
-            expect(result.error?.code).toBe('CONNECTION_ERROR')
-        })
-    })
-
     describe('deductInventoryBatch', () => {
         it('應該成功批量扣除多個商品庫存', async () => {
             // Given: 模擬成功的批量扣除回應
@@ -173,7 +64,7 @@ describe('SupabaseProductRepository - 庫存管理功能', () => {
             expect(result.error).toBeNull()
             expect(result.data).toEqual(mockResult)
             expect(mockSupabaseRpc).toHaveBeenCalledWith('deduct_inventory_batch', {
-                items: JSON.stringify([
+                items: ([
                     { product_id: 'product-1', quantity: 2 },
                     { product_id: 'product-2', quantity: 2 }
                 ])
@@ -239,10 +130,10 @@ describe('SupabaseProductRepository - 庫存管理功能', () => {
             expect(result.error).toBeNull()
             expect(result.data).toEqual(mockResult)
             expect(mockSupabaseRpc).toHaveBeenCalledWith('check_inventory_availability', {
-                items: JSON.stringify([
+                items: [
                     { product_id: 'product-1', quantity: 2 },
                     { product_id: 'product-2', quantity: 2 }
-                ])
+                ]
             })
         })
 

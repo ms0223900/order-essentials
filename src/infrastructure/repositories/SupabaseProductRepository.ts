@@ -2,7 +2,6 @@ import {
   BatchInventoryDeductionResult,
   InventoryAvailabilityResult,
   InventoryDeductionRequest,
-  InventoryDeductionResult,
   ProductRepository
 } from '@/domain/repositories/ProductRepository'
 import { CreateProductRequest, Product, UpdateProductRequest, UpdateStockRequest } from '@/domain/types/Product'
@@ -362,55 +361,6 @@ export class SupabaseProductRepository implements ProductRepository {
         data: null,
         error: {
           message: '搜尋商品時發生未預期的錯誤',
-          code: 'UNEXPECTED_ERROR',
-          details: error
-        }
-      }
-    }
-  }
-
-  /**
-   * 扣除單個商品庫存
-   */
-  async deductInventory(request: InventoryDeductionRequest): Promise<RepositoryResult<InventoryDeductionResult>> {
-    try {
-      const { data, error } = await supabase.rpc('deduct_inventory', {
-        product_id: request.productId,
-        quantity_to_deduct: request.quantity
-      })
-
-      if (error) {
-        return {
-          data: null,
-          error: {
-            message: `扣除庫存失敗: ${error.message}`,
-            code: error.code,
-            details: error
-          }
-        }
-      }
-
-      const result = data as unknown as InventoryDeductionResult
-
-      if (!result.success) {
-        return {
-          data: null,
-          error: {
-            message: result.error || '扣除庫存失敗',
-            code: result.errorCode || 'DEDUCTION_FAILED'
-          }
-        }
-      }
-
-      return {
-        data: result,
-        error: null
-      }
-    } catch (error) {
-      return {
-        data: null,
-        error: {
-          message: '扣除庫存時發生未預期的錯誤',
           code: 'UNEXPECTED_ERROR',
           details: error
         }
