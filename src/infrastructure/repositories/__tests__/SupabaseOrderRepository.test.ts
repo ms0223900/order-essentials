@@ -1,17 +1,18 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { SupabaseOrderRepository } from '../SupabaseOrderRepository';
 import type { CreateOrderRequest, UpdateOrderStatusRequest } from '@/domain/types/Order';
+import { supabase } from '@/integrations/supabase/client';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { SupabaseOrderRepository } from '../SupabaseOrderRepository';
 
 // Mock Supabase client
-const mockSupabaseRpc = vi.fn();
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
-    rpc: mockSupabaseRpc
+    rpc: vi.fn()
   }
 }));
 
 describe('SupabaseOrderRepository', () => {
   let repository: SupabaseOrderRepository;
+  const mockSupabaseRpc = vi.mocked(supabase.rpc);
 
   beforeEach(() => {
     repository = new SupabaseOrderRepository();
