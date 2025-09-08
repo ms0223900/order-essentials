@@ -137,10 +137,12 @@ DECLARE
     item JSON;
     product_id UUID;
     quantity INTEGER;
-    product_record RECORD;
     total_amount DECIMAL(10,2) := 0;
     subtotal DECIMAL(10,2);
     result JSON;
+    product_name TEXT;
+    product_price DECIMAL(10,2);
+    product_image TEXT;
 BEGIN
     -- 建立訂單序列 (如果不存在)
     IF NOT EXISTS (SELECT 1 FROM pg_sequences WHERE sequencename = 'order_sequence') THEN
@@ -156,7 +158,7 @@ BEGIN
         customer_name,
         customer_phone,
         customer_address,
-        total_amount
+        calculated_total
     ) VALUES (
         order_number,
         p_customer_name,
@@ -172,7 +174,7 @@ BEGIN
         quantity := (item->>'quantity')::INTEGER;
         
         -- 取得商品資訊
-        SELECT name, price, image INTO product_record.name, product_record.price, product_record.image
+        SELECT name, price, image INTO product_name, product_price, product_image
         FROM public.products
         WHERE id = product_id;
         
@@ -184,8 +186,8 @@ BEGIN
             );
         END IF;
         
-        subtotal := product_record.price * quantity;
-        total_amount := total_amount + subtotal;
+        subtotal := product_price * quantity;
+        calculated_total := calculated_total + subtotal;
         
         -- 插入訂單項目
         INSERT INTO public.order_items (
@@ -199,9 +201,9 @@ BEGIN
         ) VALUES (
             order_id,
             product_id,
-            product_record.name,
-            product_record.price,
-            product_record.image,
+            product_name,
+            product_price,
+            product_image,
             quantity,
             subtotal
         );
@@ -209,7 +211,7 @@ BEGIN
     
     -- 更新訂單總金額
     UPDATE public.orders
-    SET total_amount = total_amount
+    SET total_amount = calculated_total
     WHERE id = order_id;
     
     -- 返回成功結果
@@ -217,7 +219,7 @@ BEGIN
         'success', true,
         'order_id', order_id,
         'order_number', order_number,
-        'total_amount', total_amount
+        'total_amount', calculated_total
     );
     
 EXCEPTION
