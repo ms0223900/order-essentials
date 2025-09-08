@@ -1,5 +1,5 @@
-import { CreateProductRequest, Product, UpdateProductRequest, UpdateStockRequest } from '../types/Product'
-import { PaginationOptions, RepositoryResult } from '../types/Repository'
+import { CreateProductRequest, Product, UpdateProductRequest, UpdateStockRequest } from '@/domain/types/Product'
+import { PaginationOptions, RepositoryResult } from '@/domain/types/Repository'
 
 export interface InventoryDeductionRequest {
   productId: string
