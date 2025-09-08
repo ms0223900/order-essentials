@@ -84,13 +84,13 @@ DECLARE
     subtotal DECIMAL(10,2);
     result JSON;
 BEGIN
-    -- 生成訂單編號
-    order_number := 'ORD-' || to_char(now(), 'YYYYMMDD') || '-' || lpad(nextval('order_sequence')::text, 6, '0');
-    
     -- 建立訂單序列 (如果不存在)
     IF NOT EXISTS (SELECT 1 FROM pg_sequences WHERE sequencename = 'order_sequence') THEN
         CREATE SEQUENCE order_sequence START 1;
     END IF;
+    
+    -- 生成訂單編號
+    order_number := 'ORD-' || to_char(now(), 'YYYYMMDD') || '-' || lpad(nextval('order_sequence')::text, 6, '0');
     
     -- 計算總金額
     FOR item IN SELECT * FROM json_array_elements(p_items)
